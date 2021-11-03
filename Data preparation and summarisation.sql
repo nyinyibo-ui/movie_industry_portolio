@@ -74,4 +74,42 @@ select released_country,avg(budget) avg_budget,AVG(gross) avg_gross from movies$
 GROUP BY released_country
 ORDER BY 2 DESC, 3 DESC ;
 
+---Q3. WHAT FACTORS CAN MAKE A MOVIE ACCQUIRE HIGHER IMDb
+WITH good_cte AS 
+(
+SELECT score, AVG(avg(runtime)) OVER(PARTITION BY score) avg_runtime,rating,count(rating) count_rating,
+ROW_NUMBER() over (PARTITION BY score ORDER BY count(rating)  DESC) as  row_num
+FROM movies$
+GROUP BY rating,score
+),  good1 as 
+(
+SELECT score,genre,count(genre) count_rating,
+ROW_NUMBER() over (PARTITION BY score ORDER BY count(genre)  DESC) as  row_num
+FROM movies$
+GROUP BY genre,score
+), good2 as
+(
+SELECT score,company,count(company) count_rating,
+ROW_NUMBER() over (PARTITION BY score ORDER BY count(company)  DESC) as  row_num
+FROM movies$
+GROUP BY company,score
+) 
+SELECT good_cte.score,avg_runtime,rating,genre ,company
+FROM good_cte
+LEFT JOIN good1 ON
+good_cte.score=good1.score
+LEFT JOIN good2 ON
+good_cte.score=good2.score
+WHERE good_cte.row_num=1 and good1.row_num=1 and good2.row_num=1
+ORDER BY 1 DESC;
+
+
+
+
+
+
+
+
+
+
 
